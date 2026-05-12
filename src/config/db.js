@@ -1,23 +1,21 @@
 const { Pool } = require("pg");
 
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+
 const pool = new Pool({
-    user: "postgres",
+    connectionString: process.env.DATABASE_URL,
 
-    host: "localhost",
-
-    database: "hospital_db",
-
-    password: "Hospital@123",
-
-    port: 5432,
+    ssl: {
+        rejectUnauthorized: false,
+    },
 });
 
-pool.connect((err) => {
-    if (err) {
-        console.log("Database connection error:", err);
-    } else {
-        console.log("PostgreSQL Connected");
-    }
-});
+pool.connect()
+    .then(() => {
+        console.log("✅ Cloud PostgreSQL Connected");
+    })
+    .catch((err) => {
+        console.log("❌ Database connection error:", err.message);
+    });
 
 module.exports = pool;

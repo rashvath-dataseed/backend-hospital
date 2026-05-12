@@ -1,6 +1,6 @@
 # Hospital Management System API Documentation
 
-**Base URL**: `http://localhost:6000`  
+**Base URL**: `http://localhost:5001`  
 **Authentication**: Bearer Token (JWT) in Authorization Header.
 
 ---
