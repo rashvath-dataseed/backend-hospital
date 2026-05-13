@@ -1,0 +1,131 @@
+@baseUrl = https://backend-hospital-emzh.onrender.com/api
+@token = PASTE_TOKEN_HERE
+
+### Health check
+GET https://backend-hospital-emzh.onrender.com/
+
+### Register patient
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "full_name": "Jane Patient",
+  "email": "jane@test.com",
+  "password": "123456",
+  "role": "PATIENT"
+}
+
+### Register doctor
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "full_name": "Dr. John Smith",
+  "email": "drjohn@test.com",
+  "password": "123456",
+  "role": "DOCTOR"
+}
+
+### Login (copy token from response → paste into @token above)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "jane@test.com",
+  "password": "123456"
+}
+
+### Login as doctor (paste doctor token into @doctorToken below)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "drjohn@test.com",
+  "password": "123456"
+}
+
+###
+@doctorToken = PASTE_DOCTOR_TOKEN_HERE
+
+### Create doctor profile (run with doctor token — makes doctor appear in list)
+POST {{baseUrl}}/doctors/create-profile
+Content-Type: application/json
+Authorization: Bearer {{doctorToken}}
+
+{
+  "specialization": "Cardiology",
+  "experience_years": 5,
+  "consultation_fee": 500,
+  "hospital_name": "City Hospital",
+  "qualification": "MBBS, MD",
+  "available_days": ["Monday", "Tuesday", "Wednesday"],
+  "available_time": "09:00-17:00"
+}
+
+### Get all doctors
+GET {{baseUrl}}/doctors
+Authorization: Bearer {{token}}
+
+### Search doctors by name
+GET {{baseUrl}}/doctors?name=john
+Authorization: Bearer {{token}}
+
+### Search doctors by specialization
+GET {{baseUrl}}/doctors?specialization=cardiology
+Authorization: Bearer {{token}}
+
+### My appointments
+GET {{baseUrl}}/appointments/my-appointments
+Authorization: Bearer {{token}}
+
+### Book appointment (replace doctor_id with real id from GET /doctors)
+POST {{baseUrl}}/appointments/book
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "doctor_id": 1,
+  "appointment_date": "2026-05-20",
+  "appointment_time": "10:00 AM",
+  "reason": "General checkup"
+}
+
+### My notifications
+GET {{baseUrl}}/notifications
+Authorization: Bearer {{token}}
+
+### My bills
+GET {{baseUrl}}/billing/my-bills
+Authorization: Bearer {{token}}
+
+### Get doctor my-profile (login as DOCTOR first)
+GET {{baseUrl}}/doctors/my-profile
+Authorization: Bearer {{token}}
+
+### Update doctor profile (login as DOCTOR first)
+PUT {{baseUrl}}/doctors/update-profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "specialization": "Cardiology",
+  "experience_years": 10,
+  "consultation_fee": 150,
+  "hospital_name": "City Medical Center",
+  "qualification": "MBBS, MD",
+  "available_days": ["Monday", "Wednesday", "Friday"],
+  "available_time": "09:00 AM - 05:00 PM"
+}
+
+### Chat rooms
+GET {{baseUrl}}/chat/rooms
+Authorization: Bearer {{token}}
+
+### Get/create chat room with a doctor (replace doctor_id)
+POST {{baseUrl}}/chat/room
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "doctor_id": 1
+}
