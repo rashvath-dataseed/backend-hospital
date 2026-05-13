@@ -70,7 +70,7 @@ const createProfile = async (req, res) => {
  */
 const getAllDoctors = async (req, res) => {
     try {
-        const { specialization, page = 1, limit = 10 } = req.query;
+        const { specialization, name, page = 1, limit = 10 } = req.query;
         const offset = (page - 1) * limit;
 
         let query = `
@@ -80,11 +80,22 @@ const getAllDoctors = async (req, res) => {
         `;
         const params = [];
         let paramIndex = 1;
+        const conditions = [];
 
         if (specialization) {
-            query += ` WHERE d.specialization ILIKE $${paramIndex}`;
+            conditions.push(`d.specialization ILIKE $${paramIndex}`);
             params.push(`%${specialization}%`);
             paramIndex++;
+        }
+
+        if (name) {
+          conditions.push(`u.full_name ILIKE $${paramIndex}`);
+          params.push(`%${name}%`);
+          paramIndex++;
+        }
+
+        if (conditions.length > 0) {
+          query += ` WHERE ` + conditions.join(` AND `);
         }
 
         query += ` ORDER BY d.created_at DESC`;
@@ -94,12 +105,23 @@ const getAllDoctors = async (req, res) => {
         const result = await pool.query(query, params);
 
         // Get total count
-        let countQuery = "SELECT COUNT(*) FROM doctors d";
+        let countQuery =
+          "SELECT COUNT(*) FROM doctors d JOIN users u ON d.user_id = u.id";
         const countParams = [];
+        let countIndex = 1;
+        const countConditions = [];
         if (specialization) {
-            countQuery += " WHERE d.specialization ILIKE $1";
-            countParams.push(`%${specialization}%`);
+          countConditions.push(`d.specialization ILIKE $${countIndex}`);
+          countParams.push(`%${specialization}%`);
+          countIndex++;
         }
+        if (name) {
+          countConditions.push(`u.full_name ILIKE $${countIndex}`);
+          countParams.push(`%${name}%`);
+          countIndex++;
+        }
+        if (countConditions.length > 0)
+          countQuery += " WHERE " + countConditions.join(" AND ");
         const countResult = await pool.query(countQuery, countParams);
         const totalCount = parseInt(countResult.rows[0].count);
 
@@ -118,6 +140,43 @@ const getAllDoctors = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to fetch doctors",
+        });
+    }
+};
+
+/**
+ * Get own doctor profile
+ * GET /api/doctors/my-profile
+ * Role: DOCTOR only
+ */
+const getMyProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await pool.query(
+            `SELECT d.*, u.full_name, u.email, u.phone
+            FROM doctors d
+            JOIN users u ON d.user_id = u.id
+            WHERE d.user_id = $1`,
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor profile not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: result.rows[0],
+        });
+    } catch (error) {
+        console.error("Get my profile error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch doctor profile",
         });
     }
 };
@@ -229,8 +288,9 @@ const updateProfile = async (req, res) => {
 };
 
 module.exports = {
-    createProfile,
-    getAllDoctors,
-    getDoctorById,
-    updateProfile,
+  createProfile,
+  getMyProfile,
+  getAllDoctors,
+  getDoctorById,
+  updateProfile,
 };
